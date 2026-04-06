@@ -22,13 +22,12 @@ local Flags = {
 
 local ESP_Objects = {}
 local LastTriggerTime = 0
-local OriginalSettings = {}
 
 -- Utility Functions
 local function IsBot(character)
     if not character then return false end
     local player = Players:GetPlayerFromCharacter(character)
-    return player == nil -- If there's a character but no player, it's likely a bot/NPC
+    return player == nil 
 end
 
 local function GetClosestTarget()
@@ -64,7 +63,7 @@ local function GetClosestTarget()
     for _, plr in ipairs(Players:GetPlayers()) do
         checkEntity(plr.Character, true)
     end
-    -- Check Bots (if enabled, scans workspace for humanoids)
+    -- Check Bots
     if Flags.SilentBots then
         for _, obj in ipairs(Workspace:GetDescendants()) do
             if obj:IsA("Model") and obj:FindFirstChildOfClass("Humanoid") and not Players:GetPlayerFromCharacter(obj) then
@@ -79,8 +78,6 @@ end
 -- Custom Notification Handler
 local function Notify(title, content)
     if Flags.DisableAllNotifs then return end
-    -- Note: Rayfield doesn't natively expose the sound object easily, 
-    -- but we can mute Roblox's core UI sound if DisableSound is true.
     Rayfield:Notify({
         Title = title,
         Content = content,
@@ -104,7 +101,7 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- ==========================================
--- 🎯 LEGIT TAB (Silent Aim & Triggerbox)
+-- 🎯 LEGIT TAB
 -- ==========================================
 local LegitTab = Window:CreateTab("Legit", 4483345998)
 
@@ -120,9 +117,10 @@ LegitTab:CreateToggle({
    end,
 })
 
+-- BUG FIX: Changed 'CurrentKey' to 'CurrentKeybind'
 LegitTab:CreateKeybind({
    Name = "Silent Aim Keybind (PC)",
-   CurrentKey = "S",
+   CurrentKeybind = "S", 
    HoldToInteract = false,
    Flag = "SilentAimBind",
    Callback = function(Keybind)
@@ -348,7 +346,7 @@ DesyncFrame.Size = UDim2.new(0, 200, 0, 100)
 DesyncFrame.Position = UDim2.new(0.5, -100, 0.1, 0)
 DesyncFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 DesyncFrame.Active = true
-DesyncFrame.Draggable = true -- Resizable requires complex UI code, using draggable for simplicity
+DesyncFrame.Draggable = true 
 local DesyncLabel = Instance.new("TextLabel", DesyncFrame)
 DesyncLabel.Size = UDim2.new(1, 0, 1, 0)
 DesyncLabel.Text = "Desync Active\n(Spoofing Velocity)"
@@ -383,7 +381,6 @@ PlayerTab:CreateToggle({
    Callback = function(Value)
       Flags.GodMode = Value
       if Value then
-          -- Removes TouchInterests from parts locally to prevent local killbricks from working
           for _, obj in ipairs(Workspace:GetDescendants()) do
               if obj:IsA("TouchTransmitter") then
                   obj:Destroy()
@@ -394,14 +391,13 @@ PlayerTab:CreateToggle({
 })
 
 PlayerTab:CreateToggle({
-   Name = "Invisible Character (Client Illusion/Fling)",
+   Name = "Invisible Character (Client Illusion)",
    CurrentValue = false,
    Flag = "InvisibleToggle",
    Callback = function(Value)
       Flags.Invisible = Value
       local char = LocalPlayer.Character
       if Value and char and char:FindFirstChild("LowerTorso") then
-          -- Standard R15 invis bypass (destroys waist joint, heavily game dependent)
           local root = char:FindFirstChild("HumanoidRootPart")
           if root then
               local clone = root:Clone()
@@ -429,8 +425,7 @@ HitboxTab:CreateToggle({
    Name = "Hitbox TeamCheck",
    CurrentValue = false,
    Flag = "HitboxTeamCheck",
-   Callback = function(Value) -- Handled in logic
-   end,
+   Callback = function(Value) Flags.HitboxTeamCheck = Value end,
 })
 
 HitboxTab:CreateSlider({
@@ -450,7 +445,6 @@ RunService.RenderStepped:Connect(function()
             if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 -- Team Check
                 if Flags.HitboxTeamCheck and plr.Team == LocalPlayer.Team then
-                    -- Reset size if team check fails
                     plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
                     plr.Character.HumanoidRootPart.Transparency = 1
                     continue
@@ -463,7 +457,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
     else
-        -- Revert hitboxes when turned off
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 plr.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
@@ -505,9 +498,10 @@ MiscTab:CreateToggle({
    Callback = function(Value) MobileResetGui.Enabled = Value end,
 })
 
+-- BUG FIX: Changed 'CurrentKey' to 'CurrentKeybind'
 MiscTab:CreateKeybind({
    Name = "Fast Reset Keybind (PC)",
-   CurrentKey = "R",
+   CurrentKeybind = "R", 
    HoldToInteract = false,
    Flag = "PCResetBind",
    Callback = function(Keybind)
@@ -567,7 +561,6 @@ SettingsTab:CreateToggle({
    Flag = "DisableNotifSound",
    Callback = function(Value)
       Flags.DisableSound = Value
-      -- Mutes default UI sounds recursively if needed
       for _, snd in pairs(CoreGui:GetDescendants()) do
           if snd:IsA("Sound") then
               snd.Volume = Value and 0 or 1
@@ -578,4 +571,3 @@ SettingsTab:CreateToggle({
 
 -- Load Configuration
 Rayfield:LoadConfiguration()
-
